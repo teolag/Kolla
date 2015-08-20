@@ -1,0 +1,29 @@
+.dimmer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 110%;
+	width: 110%;
+	background-color: black;
+	opacity: 0;
+	transition: opacity 400ms linear;
+}
+.dimmer.visible {
+	opacity: 0.8;
+}
+.preview {
+	position: fixed;
+	opacity: 0;
+	transition: opacity 400ms linear, transform 400ms linear;
+	transform: scale(0,0);
+}
+.preview.visible {
+	opacity: 1;
+}
+.sensor {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+}
