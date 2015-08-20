@@ -1,6 +1,9 @@
 var Kolla = (function() {
 	var
 
+	margin = 20,
+	enlarge = false,
+
 	show = function(path) {
 		console.log("show image", path);
 		Dimmer.show();
@@ -59,7 +62,7 @@ var Kolla = (function() {
 
 		function show(path) {
 			create();
-			img.src=url+"view_picture.php?path="+path;
+			img.src=path;
 			img.onload = onload;
 			document.body.appendChild(img);
 		}
@@ -73,7 +76,12 @@ var Kolla = (function() {
 		}
 
 		function calculateBestFit() {
-			fitScale = Math.min(innerWidth/img.width, innerHeight/img.height);
+			fitScale = Math.min((innerWidth-2*margin)/img.width, (innerHeight-2*margin)/img.height);
+
+			if(!enlarge && fitScale>1) {
+				fitScale = 1;
+			}
+
 		}
 
 		function center() {

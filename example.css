@@ -1,0 +1,8 @@
+#gallery img {
+	cursor: pointer;
+}
+
+#gallery img:hover {
+	cursor: pointer;
+	outline: 2px solid rebeccapurple;
+}
