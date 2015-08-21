@@ -4,6 +4,12 @@ var Kolla = (function() {
 	margin = 20,
 	enlarge = false,
 
+
+
+
+
+
+
 	show = function(path) {
 		console.log("show image", path);
 		Dimmer.show();
@@ -18,10 +24,45 @@ var Kolla = (function() {
 		Preview.hide();
 		Sensor.deactivate();
 		//document.body.style.overflow = "auto";
-	};
+	},
+
+	findAndInit = function() {
+		var singleImages = document.querySelectorAll(':not([class="kolla-gallery"]) .kolla-image');
+		console.log("init Kolla", singleImages);
+		for(var i=0; i<singleImages.length; i++) {
+			console.log("init single image", singleImages[i]);
+			singleImages[i].addEventListener("click", function(e) {
+				var path = e.target.dataset.path;
+				if(!path) return;
+				Kolla.show(path);
+			}, false);
+		}
+
+		var galleries = document.querySelectorAll(".kolla-gallery");
+		for(var i=0; i<galleries.length; i++) {
+			console.log("init gallery", galleries[i]);
+
+			galleries[i].addEventListener("click", function(e) {
+				var gallery = this;
+				console.log("Gallery clicked:", this, e);
+				var path = e.target.dataset.path;
+				if(!path) return;
+
+				var images = gallery.querySelectorAll('.kolla-image');
+				for(var i=0; i<images.length; i++) {
+					if(e.target === images[i]) {
+						console.log("show image " + (i+1) + " of " + images.length);
+						break;
+					}
+				}
+
+				Kolla.show(path);
+			} , false);
+		}
+	},
 
 
-	var Sensor = (function() {
+	Sensor = (function() {
 		var div;
 
 		function activate() {
@@ -44,10 +85,10 @@ var Kolla = (function() {
 			activate: activate,
 			deactivate: deactivate
 		}
-	}());
+	}()),
 
 
-	var Preview = (function() {
+	Preview = (function() {
 		var img, left, top, scale, fitScale;
 
 		function create() {
@@ -118,10 +159,10 @@ var Kolla = (function() {
 			show: show,
 			hide: hide
 		}
-	}());
+	}()),
 
 
-	var Dimmer = (function() {
+	Dimmer = (function() {
 		var dim;
 
 		function create() {
@@ -157,6 +198,8 @@ var Kolla = (function() {
 		}
 	}());
 
+
+	document.addEventListener("DOMContentLoaded", findAndInit, false);
 
 	return {
 		show: show,

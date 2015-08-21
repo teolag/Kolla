@@ -22,8 +22,7 @@ var images = [
 ];
 
 
-var gallery = document.getElementById("gallery");
-gallery.addEventListener("click", galleryClick, false);
+
 
 
 var antal = images.length;
@@ -33,18 +32,10 @@ for(var i=0; i<antal; i++) {
 	var thumb = new Image();
 	thumb.src = images[i].thumb;
 	thumb.dataset.path = images[i].original;
-	gallery.appendChild(thumb);
+	thumb.className = "kolla-image";
+	dynamicGallery.appendChild(thumb);
 }
 
 
 
 
-
-
-
-function galleryClick(e) {
-	var path = e.target.dataset.path;
-	if(!path) return;
-
-	Kolla.show(path);
-}
