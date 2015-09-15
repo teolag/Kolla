@@ -4,9 +4,9 @@ var Kolla = (function() {
 	margin = 20,
 	enlarge = false,
 
-
-
-
+	KEY_ESC = 27,
+	KEY_LEFT = 37,
+	KEY_RIGHT = 39,
 
 
 
@@ -27,14 +27,13 @@ var Kolla = (function() {
 	},
 
 	findAndInit = function() {
-		var singleImages = document.querySelectorAll(':not([class="kolla-gallery"]) .kolla-image');
+		var singleImages = document.querySelectorAll('.kolla-single-image');
 		console.log("init Kolla", singleImages);
 		for(var i=0; i<singleImages.length; i++) {
 			console.log("init single image", singleImages[i]);
 			singleImages[i].addEventListener("click", function(e) {
-				var path = e.target.dataset.path;
-				if(!path) return;
-				Kolla.show(path);
+				var gallery = new Gallery(e.target);
+				gallery.showIndex(0);
 			}, false);
 		}
 
@@ -43,12 +42,16 @@ var Kolla = (function() {
 			console.log("init gallery", galleries[i]);
 
 			galleries[i].addEventListener("click", function(e) {
-				var gallery = this;
-				console.log("Gallery clicked:", this, e);
+
+				if(e.button != 0) return;
+				var galleryDiv = this;
 				var path = e.target.dataset.path;
 				if(!path) return;
 
-				var images = gallery.querySelectorAll('.kolla-image');
+				var images = galleryDiv.querySelectorAll('.kolla-image');
+
+				var gallery = new Gallery(images);
+
 				for(var i=0; i<images.length; i++) {
 					if(e.target === images[i]) {
 						console.log("show image " + (i+1) + " of " + images.length);
@@ -56,36 +59,11 @@ var Kolla = (function() {
 					}
 				}
 
-				Kolla.show(path);
+				gallery.showIndex(i);
+
 			} , false);
 		}
 	},
-
-
-	Sensor = (function() {
-		var div;
-
-		function activate() {
-			if(div) {
-
-			} else {
-				div = document.createElement("div");
-				div.classList.add("sensor");
-				div.addEventListener("click", close, false);
-				document.body.appendChild(div);
-			}
-		}
-
-		function deactivate() {
-			div.parentNode.removeChild(div);
-			div = null;
-		}
-
-		return {
-			activate: activate,
-			deactivate: deactivate
-		}
-	}()),
 
 
 	Preview = (function() {
@@ -198,6 +176,79 @@ var Kolla = (function() {
 		}
 	}());
 
+	Gallery = function(images) {
+		if(!images) return;
+		if(images instanceof Node) this.images = [images];
+		else this.images = images;
+		this.index = 0;
+		this.open = false;
+		this.sensor = null;
+	};
+
+	Gallery.prototype = {
+		showIndex: function(i) {
+			this.index = i;
+			var path = this.images[i].dataset.path;
+			console.log("Show index", i, "image "+(i+1)+" of "+this.images.length);
+
+			if(!this.open) {
+				Dimmer.show();
+				this.open = true;
+				this.sensor = document.createElement("div");
+				this.sensor.classList.add("sensor");
+				this.sensor.addEventListener("click", this.close.bind(this), false);
+				document.body.appendChild(this.sensor);
+
+				this.keyHandlerBinding = this.keyHandler.bind(this);
+				this.mouseWheelBinding = this.mouseWheelHandler.bind(this);
+				document.addEventListener("keydown", this.keyHandlerBinding, false);
+				document.addEventListener("mousewheel", this.mouseWheelBinding, false);
+			}
+			Preview.show(path);
+		},
+
+		close: function() {
+			Dimmer.hide();
+			Preview.hide();
+			this.sensor.parentNode.removeChild(this.sensor);
+			this.sensor = null;
+			document.removeEventListener("keydown", this.keyHandlerBinding, false);
+			document.removeEventListener("mousewheel", this.mouseWheelBinding, false);
+			this.open = false;
+		},
+
+		keyHandler: function(e) {
+			switch(e.keyCode) {
+				case KEY_ESC:
+					this.close();
+				break;
+				case KEY_LEFT:
+					this.previous()
+				break;
+				case KEY_RIGHT:
+					this.next()
+				break;
+			}
+		},
+
+		mouseWheelHandler: function(e) {
+			if(e.wheelDeltaY>0) {
+				this.previous();
+			} else {
+				this.next();
+			}
+		},
+
+		next: function() {
+			if(this.index === this.images.length-1) return;
+			this.showIndex(this.index+1);
+		},
+
+		previous: function() {
+			if(this.index===0) return;
+			this.showIndex(this.index-1);
+		}
+	};
 
 	document.addEventListener("DOMContentLoaded", findAndInit, false);
 
