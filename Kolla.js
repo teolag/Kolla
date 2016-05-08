@@ -1,3 +1,30 @@
+/*
+
+Klick på bilden
+
+Klick utanför bilden stänger
+
+Swajpa höger ut ur bild = nästa bild *
+Swajpa vänster ut ur bild = föregående bild *
+
+Swajpa upp, ner, höger vänster = panorera
+
+Mushjul ner = zooma ut
+Mushjul upp = zooma in
+
+Pinch = zoom
+
+Långtouch sen uppåt = zoom in
+Långtouch sen nedåt = zoom ut
+
+
+*) med eller utan animation
+*/
+
+
+
+
+
 var Kolla = (function() {
 	var
 
@@ -9,11 +36,11 @@ var Kolla = (function() {
 	KEY_RIGHT = 39,
 
 
-
+	/*
 	show = function(path) {
 		console.log("show image", path);
 		Dimmer.show();
-		Preview.show(path);
+		Picture.show(path);
 		Sensor.activate();
 		//document.body.style.overflow = "hidden";
 	},
@@ -21,10 +48,11 @@ var Kolla = (function() {
 	close = function() {
 		console.log("CLOSE");
 		Dimmer.hide();
-		Preview.hide();
+		Picture.hide();
 		Sensor.deactivate();
 		//document.body.style.overflow = "auto";
 	},
+	*/
 
 	findAndInit = function() {
 		var singleImages = document.querySelectorAll('.kolla-single-image');
@@ -33,7 +61,7 @@ var Kolla = (function() {
 			console.log("init single image", singleImages[i]);
 			singleImages[i].addEventListener("click", function(e) {
 				var gallery = new Gallery(e.target);
-				gallery.showIndex(0);
+				gallery.openImage();
 			}, false);
 		}
 
@@ -59,14 +87,14 @@ var Kolla = (function() {
 					}
 				}
 
-				gallery.showIndex(i);
+				gallery.openImage(i);
 
 			} , false);
 		}
 	},
 
 
-	Preview = (function() {
+	Picture = (function() {
 		var img, left, top, scale, fitScale;
 
 		function create() {
@@ -74,7 +102,7 @@ var Kolla = (function() {
 				img.removeEventListener('webkitTransitionEnd', removeAfterFadeOut, false);
 			} else {
 				img = new Image();
-				img.classList.add("preview");
+				img.classList.add("kolla-picture");
 				addEventListener("resize", resize);
 			}
 		}
@@ -112,12 +140,24 @@ var Kolla = (function() {
 		}
 
 		function resize() {
+			// If fit to screen, no scale override
 			if(scale===fitScale) {
 				calculateBestFit();
 				scale = fitScale;
-				img.style.transform = "scale("+scale+","+scale+")";
 			}
+
+			img.style.transform = "scale("+scale+","+scale+")";
 			center();
+		}
+
+		function zoom(factor) {
+			scale*=factor;
+			if(scale<fitScale) scale=fitScale;
+			resize();
+		}
+
+		function getScale() {
+			return scale;
 		}
 
 		function hide() {
@@ -135,7 +175,9 @@ var Kolla = (function() {
 
 		return {
 			show: show,
-			hide: hide
+			hide: hide,
+			zoom: zoom,
+			getScale: getScale
 		}
 	}()),
 
@@ -148,7 +190,7 @@ var Kolla = (function() {
 				dim.removeEventListener('webkitTransitionEnd', removeAfterFadeOut, false);
 			} else {
 				dim = document.createElement("div");
-				dim.classList.add("dimmer");
+				dim.classList.add("kolla-dimmer");
 				document.body.appendChild(dim);
 			}
 		}
@@ -186,34 +228,36 @@ var Kolla = (function() {
 	};
 
 	Gallery.prototype = {
-		showIndex: function(i) {
+		openImage: function(i) {
+			i = i || 0;
 			this.index = i;
 			var path = this.images[i].dataset.path;
 			console.log("Show index", i, "image "+(i+1)+" of "+this.images.length);
 
 			if(!this.open) {
 				Dimmer.show();
+
 				this.open = true;
 				this.sensor = document.createElement("div");
-				this.sensor.classList.add("sensor");
+				this.sensor.classList.add("kolla-sensor");
 				this.sensor.addEventListener("click", this.close.bind(this), false);
 				document.body.appendChild(this.sensor);
 
 				this.keyHandlerBinding = this.keyHandler.bind(this);
 				this.mouseWheelBinding = this.mouseWheelHandler.bind(this);
 				document.addEventListener("keydown", this.keyHandlerBinding, false);
-				document.addEventListener("mousewheel", this.mouseWheelBinding, false);
+				document.addEventListener("wheel", this.mouseWheelBinding, false);
 			}
-			Preview.show(path);
+			Picture.show(path);
 		},
 
 		close: function() {
 			Dimmer.hide();
-			Preview.hide();
+			Picture.hide();
 			this.sensor.parentNode.removeChild(this.sensor);
 			this.sensor = null;
 			document.removeEventListener("keydown", this.keyHandlerBinding, false);
-			document.removeEventListener("mousewheel", this.mouseWheelBinding, false);
+			document.removeEventListener("wheel", this.mouseWheelBinding, false);
 			this.open = false;
 		},
 
@@ -232,11 +276,16 @@ var Kolla = (function() {
 		},
 
 		mouseWheelHandler: function(e) {
-			if(e.wheelDeltaY>0) {
-				this.previous();
-			} else {
-				this.next();
-			}
+			/*
+			use deltamode!!!
+			https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+			*/
+
+			console.log("wheel", e.deltaY, e);
+			Picture.zoom(1+(-e.deltaY/1000));
+			console.log("scale:", Picture.getScale());
+			e.preventDefault();
+
 		},
 
 		next: function() {
@@ -253,8 +302,10 @@ var Kolla = (function() {
 	document.addEventListener("DOMContentLoaded", findAndInit, false);
 
 	return {
+		/*
 		show: show,
 		close: close
+		*/
 	};
 
 }());
